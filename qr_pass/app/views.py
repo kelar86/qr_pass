@@ -1,4 +1,5 @@
 import tempfile
+import uuid
 from urllib.parse import urlparse
 
 import flask
@@ -38,7 +39,8 @@ def login():
         user = User.query.filter(User.phone == form.phone.data).first()
 
         if not user:
-            user = User(phone=form.phone.data, active=True)
+            _id = str(uuid.uuid1())
+            user = User(id=_id, phone=form.phone.data, active=True)
             db.session.add(user)
             db.session.commit()
 

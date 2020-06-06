@@ -10,7 +10,6 @@ Base = db.Model
 def generate_uuid():
     return str(uuid.uuid4())
 
-
 class User(Base, UserMixin):
     __tablename__ = 'user'
 
