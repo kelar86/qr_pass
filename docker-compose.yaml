@@ -1,0 +1,33 @@
+version: '2'
+services:
+    app:
+        build: .
+        environment:
+          DEBUG: 'True'
+          PYTHONUNBUFFERED: 1
+#          PROXY: 'socks5h://176.36.52.12:1088' #https://50na50.net/ru/proxy/socks5list
+#          DB_URI: "mysql+mysqldb://root:root@db:3306/bot_db?use_unicode=1&charset=utf8mb4"
+#        depends_on:
+#          - db
+        ports:
+          - 8881:8881
+        volumes:
+          - ./:/code
+        command: ["python", "qr_pass/main.py"]
+        restart: always
+
+
+#    db:
+#        build:
+#            context: .
+#            dockerfile: Dockerfile-DB
+#        environment:
+#            MYSQL_ROOT_PASSWORD: root
+#        ports:
+#            - "32000:3306"
+#
+#    adminer:
+#        image: adminer
+#        restart: always
+#        ports:
+#            - 8080:8080

@@ -1,0 +1,18 @@
+<!-- extend from base layout -->
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Вход в систему</h1>
+<form action="" method="post" name="login">
+    {{form.hidden_tag()}}
+    <p>
+        Номер телефона:<br>
+        {{form.phone(size=80)}}<br>
+        {% for error in form.errors.phone %}
+        <span style="color: red;">[{{error}}]</span>
+        {% endfor %}
+    </p>
+    <p>{{form.remember}} Запомнить меня</p>
+    <p><input type="submit" value="Войти"></p>
+</form>
+{% endblock %}

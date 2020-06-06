@@ -1,0 +1,26 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+    {% if title %}{{ title }} - QR Pass system{% else %}QR Pass system{% endif %}
+{% endblock %}
+
+{% block navbar %}
+<!-- navbar -->
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+       {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <!-- MAIN CONTENT -->
+        {% block app_content %}{% endblock %}
+    </div>
+{% endblock %}
