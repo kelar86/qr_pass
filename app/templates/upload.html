@@ -1,19 +1,14 @@
-<!-- extend from base layout -->
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Photo Upload</h1>
-<form method="POST" enctype="multipart/form-data">
-    {{ form.hidden_tag() }}
-    {{ form.photo }}
-    {% for error in form.photo.errors %}
-        <span style="color: red;">{{ error }}</span>
-    {% endfor %}
-    {{ form.submit }}
-</form>
+{% block page_content %}
+    <h1>Загрузите фотографию</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ form.photo(class_="file") }}
+        {% for error in form.photo.errors %}
+            <span style="color: red;">{{ error }}</span>
+        {% endfor %}
+    </form>
 
-{% if file_url %}
-<br>
-<img src="{{ file_url }}">
-{% endif %}
 {% endblock %}
+

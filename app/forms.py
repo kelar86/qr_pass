@@ -1,26 +1,30 @@
+import phonenumbers
+
 from app import photos
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import BooleanField, SubmitField, StringField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, ValidationError
+from wtforms.fields.html5 import TelField
+
 
 
 class LoginForm(FlaskForm):
-    phone = StringField('email', validators=[DataRequired(), Length(min=11, max=12)])
-    remember = BooleanField('remember_me', default=False)
-    submit = SubmitField('login')
+    phone = TelField('Номер телефона:', validators=[DataRequired()])
+    remember = BooleanField('Запомнить меня', default=True)
+    submit = SubmitField('Войти')
 
-    # def validate_phone(form, field):
-    #     if len(field.data) > 16:
-    #         raise ValidationError('Invalid phone number.')
-    #     try:
-    #         input_number = phonenumbers.parse(field.data)
-    #         if not (phonenumbers.is_valid_number(input_number)):
-    #             raise ValidationError('Invalid phone number.')
-    #     except:
-    #         input_number = phonenumbers.parse("+1"+field.data)
-    #         if not (phonenumbers.is_valid_number(input_number)):
-    #             raise ValidationError('Invalid phone number.')
+    def validate_phone(form, field):
+
+        cleaned_data = field.data.replace("+", '').replace("-", '').replace('_', '')
+
+        if len(cleaned_data) != 11:
+            raise ValidationError('Номер телефона должен содержать 11 цифр')
+
+        input_number = phonenumbers.parse(field.data)
+        if not (phonenumbers.is_valid_number(input_number)):
+            raise ValidationError('Не верный номер!')
+
 
 
 class UploadForm(FlaskForm):

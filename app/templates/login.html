@@ -1,18 +1,30 @@
 <!-- extend from base layout -->
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
 
-{% block content %}
-<h1>Вход в систему</h1>
-<form action="" method="post" name="login">
-    {{form.hidden_tag()}}
-    <p>
-        Номер телефона:<br>
-        {{form.phone(size=80)}}<br>
-        {% for error in form.errors.phone %}
-        <span style="color: red;">[{{error}}]</span>
-        {% endfor %}
-    </p>
-    <p>{{form.remember}} Запомнить меня</p>
-    <p><input type="submit" value="Войти"></p>
-</form>
+{% block head %}
+  {{super()}}
+  {{fixes.ie8()}}
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.60/inputmask/jquery.inputmask.js"></script>
+    <script type='text/javascript' src="http://rawgit.com/RobinHerbots/jquery.inputmask/3.x/dist/jquery.inputmask.bundle.js"></script>
+    <script>
+        $j=jQuery.noConflict();
+        $j('document').ready(function() {
+            $j(":input").inputmask();
+        });
+    </script>
 {% endblock %}
+
+
+{% block page_content %}
+<h1>Вход в систему</h1>
+<form action="" method="post" class="form" role="form">
+  {{ form.csrf_token() }}
+  {{ wtf.form_field(form.phone, class='form-control', **{'data-inputmask':"'mask': '+7-999-999-99-99'"})}}
+  {{ wtf.form_field(form.remember, class='form-control', value=true)}}
+  {{ wtf.form_field(form.submit)}}
+</form>
+
+
+{% endblock %}
+

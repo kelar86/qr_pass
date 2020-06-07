@@ -13,7 +13,7 @@ services:
           - 8881:8881
         volumes:
           - ./:/code
-        command: ["python", "qr_pass/main.py"]
+        command: ["python", "main.py"]
         restart: always
 
 
