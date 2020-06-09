@@ -1,9 +1,11 @@
 import uuid
 
+from sqlalchemy.orm import relationship
+
 from app import db
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, \
-    String, Boolean
+    String, Boolean, DateTime, ForeignKey
 
 Base = db.Model
 
@@ -11,14 +13,14 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-class User(Base, UserMixin):
-    __tablename__ = 'user'
+class Person(Base, UserMixin):
+    __tablename__ = 'person'
 
-    id = Column('id', String, primary_key=True, default=generate_uuid())
-    phone = Column('phone', String, nullable=False)
-    passport_number = Column('passport_number', Integer)
-    active = Column('active', Boolean, nullable=False, default=False)
-    photo = Column('photo', String)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    phone = Column(String, nullable=False)
+    passport_number = Column(Integer)
+    active = Column(Boolean, nullable=False, default=False)
+    photo = Column(String)
 
     @property
     def is_active(self):
@@ -31,4 +33,13 @@ class User(Base, UserMixin):
 
 class Pass(Base):
     __tablename__ = 'pass'
-    id = Column('id', Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    start_at = Column(DateTime)
+    expire_at = Column(DateTime)
+    verified = Column(Boolean, nullable=False, default=False)
+    person_id = Column(ForeignKey('person.id'), nullable=False)
+
+
+class Passage(Base):
+    __tablename__ = 'passage'
+    id = Column(Integer, primary_key=True, autoincrement=True)
