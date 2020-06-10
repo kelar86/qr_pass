@@ -2,13 +2,10 @@
 
 {% block page_content %}
     <h1>Загрузите фотографию</h1>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" onsubmit="showPreview();">
         {{ form.hidden_tag() }}
-        {{ form.photo(class_="file") }}
-        {% for error in form.photo.errors %}
-            <span style="color: red;">{{ error }}</span>
-        {% endfor %}
+        {{ wtf.form_field(form.photo, class_="file", **{' data-browse-on-zone-click': "true"}) }}
     </form>
 
+{#    <img src="{{url_for('static', filename=form.tempname + '.png')}}">#}
 {% endblock %}
-

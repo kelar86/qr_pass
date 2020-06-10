@@ -1,9 +1,12 @@
+import os
 import tempfile
 import uuid
 from urllib.parse import urlparse
 
 import flask
 import qrcode
+from PIL import Image, ExifTags
+
 from app import app, db, photos
 from app.forms import LoginForm, UploadForm, PassportForm
 from app.models import Person, Pass
@@ -20,6 +23,26 @@ def upload():
     if form.validate_on_submit():
         file = photos.save(form.photo.data, name=f'{uuid.uuid4()}.')
         src = urlparse(photos.url(file)).path
+
+        # # Rotate image
+        # path = os.path.join(os.path.abspath(os.path.dirname(__file__)), src)
+        # image = Image.open(path)
+
+        # for orientation in ExifTags.TAGS.keys():
+        #     if ExifTags.TAGS[orientation] == 'Orientation':
+        #         break
+        # exif = dict(image._getexif().items())
+        #
+        # if exif[orientation] == 3:
+        #     image = image.transpose(Image.ROTATE_180)
+        # elif exif[orientation] == 6:
+        #     image = image.transpose(Image.ROTATE_270)
+        # elif exif[orientation] == 8:
+        #     image = image.transpose(Image.ROTATE_90)
+        #
+        # image.save(src)
+        # image.close()
+
         user = current_user
         if user:
             _pass = Pass(person_id=user.id)
@@ -72,15 +95,14 @@ def get_qr_code(id):
 
     t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
     img = qr.make_image(fill_color="black", back_color="white")
-    img.save(t_file, format='JPEG')
+    img.save(t_file, format='PNG')
     t_file.seek(0)
 
     return send_file(t_file.name,
-                     mimetype='image/jpeg',
+                     mimetype='image/png',
                      attachment_filename=t_file.name,
                      as_attachment=True
                      )
-
 
 @app.route('/qr_decode/<id>')
 def qr_decode(id):

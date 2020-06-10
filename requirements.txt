@@ -16,3 +16,5 @@ qrcode[pil]
 phonenumbers
 
 flask-login
+
+opencv-python

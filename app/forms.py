@@ -1,13 +1,17 @@
-import phonenumbers
+import os
+import tempfile
 
-from app import photos
+import phonenumbers
+from PIL import Image, ImageDraw
+
+from app import photos, uuid
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import BooleanField, SubmitField, StringField
 from wtforms.validators import DataRequired, Length, ValidationError
 from wtforms.fields.html5 import TelField, IntegerField
-# from wtforms.fields import html5 as h5fields
-# from wtforms.widgets import html5 as h5widgets
+from app.utils import is_face_detected
+from settings import basedir
 
 
 class LoginForm(FlaskForm):
@@ -15,7 +19,7 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Запомнить меня', default=True)
     submit = SubmitField('Войти')
 
-    def validate_phone(form, field):
+    def validate_phone(self, field):
 
         cleaned_data = field.data.replace("+", '').replace("-", '').replace('_', '')
 
@@ -29,8 +33,26 @@ class LoginForm(FlaskForm):
 
 
 class UploadForm(FlaskForm):
-    photo = FileField(validators=[FileAllowed(photos, u'Image only!'), FileRequired(u'File was empty!')])
+    photo = FileField('Фотография', validators=[FileAllowed(photos, u'Image only!'), FileRequired(u'File was empty!')])
     submit = SubmitField('Загрузить')
+    detected_face = None
+    tempname = str(uuid.uuid4())
+
+    def validate_photo(self, photo):
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as t_file:
+            with Image.open(photo.data) as img:
+                img.save(t_file, format='PNG')
+                self.detected_face = is_face_detected(t_file.name)
+                if not self.detected_face:
+                    raise ValidationError('Лицо на фотографии не обнаружено или не читаемо. Загрузите другое фото!')
+
+                # draw = ImageDraw.Draw(img)
+                # first = self.detected_face[0]
+                # draw.rectangle(first)
+                #
+                # img.save(os.path.join(basedir, f'app/static/{self.tempname}') + '.png', format='PNG')
+
+    # with ima
 
 
 class PassportForm(FlaskForm):

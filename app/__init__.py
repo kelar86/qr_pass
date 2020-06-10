@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, IMAGES, configure_uploads, patch_request_class
 from settings import Config
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.config.from_object(Config)
 app.secret_key = 'some_secret'
 bootstrap = Bootstrap(app)
