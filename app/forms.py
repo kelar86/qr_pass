@@ -38,13 +38,13 @@ class UploadForm(FlaskForm):
     detected_face = None
     tempname = str(uuid.uuid4())
 
-    def validate_photo(self, photo):
-        with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as t_file:
-            with Image.open(photo.data) as img:
-                img.save(t_file, format='PNG')
-                self.detected_face = is_face_detected(t_file.name)
-                if not self.detected_face:
-                    raise ValidationError('Лицо на фотографии не обнаружено или не читаемо. Загрузите другое фото!')
+    # def validate_photo(self, photo):
+    #     with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as t_file:
+    #         with Image.open(photo.data) as img:
+    #             img.save(t_file, format='PNG')
+    #             self.detected_face = is_face_detected(t_file.name)
+    #             if not self.detected_face:
+    #                 raise ValidationError('Лицо на фотографии не обнаружено или не читаемо. Загрузите другое фото!')
 
                 # draw = ImageDraw.Draw(img)
                 # first = self.detected_face[0]
