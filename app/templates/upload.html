@@ -1,11 +1,23 @@
 {% extends "base.html" %}
 
+{% block head %}
+  {{super()}}
+  {{fixes.ie8()}}
+     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/upload.css') }}">
+     <script>
+        $j=jQuery.noConflict();
+        $j( document ).ready(function() {
+            $j("#photo_input").fileinput({'showUpload': true, 'previewFileType': 'any', 'language': 'ru'});
+            $j(".fileinput-remove-button").addClass("btn-danger");
+            $j(".fileinput-upload-button").addClass("btn-success");
+        });
+    </script>
+{% endblock %}
+
 {% block page_content %}
     <h1>Загрузите фотографию</h1>
-    <form method="POST" enctype="multipart/form-data" onsubmit="showPreview();">
+    <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-        {{ wtf.form_field(form.photo, class_="file", **{' data-browse-on-zone-click': "true"}) }}
+        {{ wtf.form_field(form.photo, **{'id': 'photo_input', 'data-browse-on-zone-click': "true"}) }}
     </form>
-
-{#    <img src="{{url_for('static', filename=form.tempname + '.png')}}">#}
 {% endblock %}

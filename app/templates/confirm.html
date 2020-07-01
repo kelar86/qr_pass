@@ -1,0 +1,32 @@
+<!-- extend from base layout -->
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+  {{super()}}
+  {{fixes.ie8()}}
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.60/inputmask/jquery.inputmask.js"></script>
+    <script type='text/javascript' src="http://rawgit.com/RobinHerbots/jquery.inputmask/3.x/dist/jquery.inputmask.bundle.js"></script>
+    <script>
+        $j=jQuery.noConflict();
+        $j('document').ready(function() {
+            $j(":input").inputmask();
+        });
+    </script>
+{% endblock %}
+
+
+{% block page_content %}
+<h1>Вход в систему</h1>
+<form action="" method="post" class="form" role="form">
+    {{ form.csrf_token() }}
+    {{ wtf.form_field(form.code, class='form-control', **{'data-inputmask':"'mask': '****'"})}}
+    <div>
+        <a href="{{ url_for('confirm')}}?phone={{phone}}"> Отправить еще раз </a>
+    </div>
+            {{ wtf.form_field(form.submit, class='btn btn-primary' )}}
+
+</form>
+
+
+{% endblock %}

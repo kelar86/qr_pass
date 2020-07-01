@@ -1,18 +1,19 @@
-import os
 import tempfile
 import uuid
 from urllib.parse import urlparse
 
 import flask
 import qrcode
-from PIL import Image, ExifTags
+from wtforms import Label
 
-from app import app, db, photos
-from app.forms import LoginForm, UploadForm, PassportForm
-from app.models import Person, Pass
-from flask import url_for, render_template, abort, redirect, send_file
+from app.utils import is_face_detected
+from flask import url_for, render_template, abort, redirect, send_file, request
 from flask_admin.helpers import is_safe_url
 from flask_login import current_user, login_user, login_required, logout_user
+
+from app import app, db, photos
+from app.forms import LoginForm, UploadForm, PassportForm, CodeForm
+from app.models import Person, Pass
 
 
 @app.route('/upload/', methods=['GET', 'POST'])
@@ -59,22 +60,30 @@ def upload():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-
         user = Person.query.filter(Person.phone == form.phone.data).first()
-
         if not user:
             user = Person(phone=form.phone.data, active=True)
             db.session.add(user)
             db.session.commit()
-
-        login_user(user)
-
-        next = flask.request.args.get('next')
-        if next and not is_safe_url(next):
-            return flask.abort(400)
-        return flask.redirect(next) if next else redirect(url_for('upload'))
+        return redirect(url_for('confirm', phone=form.phone.data))
 
     return flask.render_template('login.html', form=form)
+
+
+@app.route('/confirm/', methods=['GET', 'POST'])
+def confirm():
+    phone = request.args.get('phone')
+    form = CodeForm(phone=phone)
+
+    form.code.label = Label(field_id="code", text=f"Код из СМС, отправленной на номер {phone[:6]}-***-**-{phone[-2:]}")
+    user = Person.query.filter(Person.phone == phone).first()
+
+    if form.validate_on_submit():
+        login_user(user)
+        next = flask.request.args.get('next')
+        return flask.redirect(next) if next else redirect(url_for('upload'))
+
+    return flask.render_template('confirm.html', form=form, phone=phone)
 
 
 @app.route('/person/<id>/qrcode/')
@@ -130,3 +139,4 @@ def logout():
 @app.route('/')
 def index():
     return redirect(url_for('upload'))
+

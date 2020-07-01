@@ -29,7 +29,7 @@
     <!-- the main fileinput plugin file -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.9/js/fileinput.min.js"></script>
     <!-- optionally if you need a theme like font awesome theme you can include it as mentioned below -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.9/themes/fa/theme.js"></script>
+{#    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.9/themes/fa/theme.js"></script>#}
     <!-- optionally if you need translation for your language then include  locale file as mentioned below -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-fileinput/5.0.9/js/locales/ru.js"></script>
 
@@ -46,7 +46,7 @@
 
 <!-- MAIN CONTENT -->
 {% block content %}
-    <div class="container">
+    <div class="container-fluid">
         {% block page_content %}
             {% with messages = get_flashed_messages() %}
                 {% if messages %}

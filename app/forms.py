@@ -31,12 +31,11 @@ class LoginForm(FlaskForm):
             raise ValidationError('Не верный номер!')
 
 
-
 class UploadForm(FlaskForm):
     photo = FileField('Фотография', validators=[FileAllowed(photos, u'Image only!'), FileRequired(u'File was empty!')])
     submit = SubmitField('Загрузить')
     detected_face = None
-    tempname = str(uuid.uuid4())
+    temp_name = None
 
     # def validate_photo(self, photo):
     #     with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as t_file:
@@ -46,15 +45,18 @@ class UploadForm(FlaskForm):
     #             if not self.detected_face:
     #                 raise ValidationError('Лицо на фотографии не обнаружено или не читаемо. Загрузите другое фото!')
 
-                # draw = ImageDraw.Draw(img)
-                # first = self.detected_face[0]
-                # draw.rectangle(first)
-                #
-                # img.save(os.path.join(basedir, f'app/static/{self.tempname}') + '.png', format='PNG')
-
-    # with ima
+    # draw = ImageDraw.Draw(img)
+    # first = self.detected_face[0]
+    # draw.rectangle(first)
+    #
+    # img.save(os.path.join(basedir, f'app/static/{self.tempname}') + '.png', format='PNG')
 
 
 class PassportForm(FlaskForm):
     passport_number = IntegerField('Номер паспорта', validators=[DataRequired(), Length(min=6, max=6)])
     submit = SubmitField('Изменить')
+
+
+class CodeForm(FlaskForm):
+    code = StringField(validators=[DataRequired(), Length(min=4, max=4)])
+    submit = SubmitField('Войти')
