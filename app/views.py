@@ -1,9 +1,13 @@
+import io
+import os
 import tempfile
 import uuid
 from urllib.parse import urlparse
 
 import flask
 import qrcode
+from PIL import ExifTags, Image
+from werkzeug.utils import secure_filename
 from wtforms import Label
 
 from app.utils import is_face_detected
@@ -75,7 +79,7 @@ def confirm():
     phone = request.args.get('phone')
     form = CodeForm(phone=phone)
 
-    form.code.label = Label(field_id="code", text=f"Код из СМС, отправленной на номер {phone[:6]}-***-**-{phone[-2:]}")
+    form.code.label = Label(field_id="code", text=f"На номер {phone[:6]}-***-**-{phone[-2:]} отправлен код подтверждения. Введите код")
     user = Person.query.filter(Person.phone == phone).first()
 
     if form.validate_on_submit():
@@ -86,34 +90,7 @@ def confirm():
     return flask.render_template('confirm.html', form=form, phone=phone)
 
 
-@app.route('/person/<id>/qrcode/')
-def get_qr_code(id):
-    person = db.session.query(Person).get(id)
-    if not person:
-        flask.abort(404)
-
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-
-    url = f'{flask.request.host_url}qr_decode/{person.id}'
-    qr.add_data(url)
-
-    t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
-    img = qr.make_image(fill_color="black", back_color="white")
-    img.save(t_file, format='PNG')
-    t_file.seek(0)
-
-    return send_file(t_file.name,
-                     mimetype='image/png',
-                     attachment_filename=t_file.name,
-                     as_attachment=True
-                     )
-
-@app.route('/qr_decode/<id>')
+@app.route('/qr_decode/<id>/', methods=['GET', 'POST'])
 def qr_decode(id):
     form = PassportForm()
     person = Person.query.get(id)
@@ -126,7 +103,73 @@ def qr_decode(id):
 
     passport_num = person.passport_number if person.passport_number else ''
 
-    return flask.render_template('person.html', form=form, person=person, passport_num=passport_num, _pass=_pass)
+    if form.validate_on_submit():
+        person.passport_number = form.passport_number.data
+        db.session.add(person)
+        db.session.commit()
+
+    return flask.render_template('qr_decode.html', form=form, person=person, passport_num=passport_num, _pass=_pass)
+
+
+@app.route('/person/<id>/',  methods=['GET', 'POST'])
+def get_qr_code(id):
+    form = PassportForm()
+    person = db.session.query(Person).get(id)
+    if not person:
+        flask.abort(404)
+
+    if form.validate_on_submit():
+        person.passport_number = form.passport_number.data
+        db.session.add(person)
+        db.session.commit()
+
+    return flask.render_template('person.html', person=person, form=form)
+
+@app.route('/person/<id>/download_qr/')
+def qr_code_download(id):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+
+    url = f'{flask.request.host_url}qr_decode/{id}/'
+    qr.add_data(url)
+
+    t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.jpg')
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(t_file, format='JPEG')
+    t_file.seek(0)
+
+    return send_file(t_file.name,
+                     mimetype='image/jpeg',
+                     attachment_filename=t_file.name,
+                     as_attachment=True
+                     )
+
+
+@app.route('/person/<id>/pdf_qr/')
+def qr_code_pdf(id):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+
+    url = f'{flask.request.host_url}qr_decode/{id}/'
+    qr.add_data(url)
+    img = qr.make_image(fill_color="black", back_color="white")
+    t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.pdf')
+    img.save(t_file, format='PDF', resolution=100.0)
+    t_file.seek(0)
+
+    return send_file(t_file.name,
+                     mimetype='application/pdf',
+                     attachment_filename=t_file.name,
+                     as_attachment=False
+                     )
 
 
 @app.route("/logout/")

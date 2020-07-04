@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 
 import phonenumbers
@@ -15,14 +16,13 @@ from settings import basedir
 
 
 class LoginForm(FlaskForm):
-    phone = TelField('Номер телефона:', validators=[DataRequired()])
+    phone = TelField('Номер телефона:')
     remember = BooleanField('Запомнить меня', default=True)
     submit = SubmitField('Войти')
 
     def validate_phone(self, field):
 
         cleaned_data = field.data.replace("+", '').replace("-", '').replace('_', '')
-
         if len(cleaned_data) != 11:
             raise ValidationError('Номер телефона должен содержать 11 цифр')
 
@@ -53,10 +53,31 @@ class UploadForm(FlaskForm):
 
 
 class PassportForm(FlaskForm):
-    passport_number = IntegerField('Номер паспорта', validators=[DataRequired(), Length(min=6, max=6)])
-    submit = SubmitField('Изменить')
+    passport_number = StringField('Номер паспорта')
+    submit = SubmitField('Изменить номер')
+
+    def validate_phone(self, field):
+        cleaned_data = field.data.replace("№", '').replace(" ", '')
+        if len(cleaned_data):
+            raise ValidationError('Поле не может быть пустым')
+
+        if len(cleaned_data) != 6:
+            raise ValidationError('Номер паспорта (без серии) должен содержать 6 цифр')
 
 
 class CodeForm(FlaskForm):
-    code = StringField(validators=[DataRequired(), Length(min=4, max=4)])
+    code = StringField(validators=[DataRequired(message="Введите код"), Length(min=4, max=4)])
     submit = SubmitField('Войти')
+
+    def validate_code(self, field):
+        cleaned_data = field.data.replace('_', '')
+
+        if len(cleaned_data) == 0:
+            raise ValidationError('Обязательное поле')
+
+        if re.findall(r'\D', cleaned_data):
+            raise ValidationError('Код должен содержать только цифры')
+
+        if len(cleaned_data) != 4:
+            raise ValidationError('Код должен содержать 4 цифры')
+

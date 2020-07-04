@@ -5,8 +5,8 @@
 {% block head %}
   {{super()}}
   {{fixes.ie8()}}
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.60/inputmask/jquery.inputmask.js"></script>
-    <script type='text/javascript' src="http://rawgit.com/RobinHerbots/jquery.inputmask/3.x/dist/jquery.inputmask.bundle.js"></script>
+{#    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.1.60/inputmask/jquery.inputmask.js"></script>#}
+{#    <script type='text/javascript' src="http://rawgit.com/RobinHerbots/jquery.inputmask/3.x/dist/jquery.inputmask.bundle.js"></script>#}
     <script>
         $j=jQuery.noConflict();
         $j('document').ready(function() {
@@ -20,11 +20,18 @@
 <h1>Вход в систему</h1>
 <form action="" method="post" class="form" role="form">
     {{ form.csrf_token() }}
-    {{ wtf.form_field(form.code, class='form-control', **{'data-inputmask':"'mask': '****'"})}}
+    {{ wtf.form_field(form.code, class='form-control', **{'data-inputmask':"'mask': '9999'"}) }}
+      {% if form.code.errors %}
+        <ul class="errors">{% for error in form.code.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      {% endif %}
+
+    {{ wtf.form_field(form.submit, class='btn btn-primary' )}}
     <div>
         <a href="{{ url_for('confirm')}}?phone={{phone}}"> Отправить еще раз </a>
     </div>
-            {{ wtf.form_field(form.submit, class='btn btn-primary' )}}
+    <div>
+        <a href="{{ url_for('login')}}"> Назад </a>
+    </div>
 
 </form>
 

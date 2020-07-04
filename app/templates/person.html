@@ -1,48 +1,47 @@
 {% extends "base.html" %}
 
+{% block head %}
+  {{super()}}
+  {{fixes.ie8()}}
+
+{% endblock %}
+
 {% block page_content %}
-    <h1>Электронный пропуск</h1>
+     <h1>Электронный пропуск</h1>
     <div class="row">
-        <div class="col">
-            <img src="{{ person.photo }}" class="img-thumbnail" alt="user photo">
+        <div class="col-md-8">
+            <div class="row justify-content-center">
+                <div class="col-md-12">
+                    <img src="{{ person.photo }}" class="img-thumbnail" alt="user photo"  width="400" height="700">
+                </div>
+                <div class="col-md-12">
+                    <a href="{{ url_for('upload') }}">Изменить фото</a>
+
+                </div>
+                <div class="col-md-12">
+                     <form action="" method="post" class="form" role="form">
+                         {{ form.csrf_token() }}
+                         {{ wtf.form_field(form.passport_number, class='form-control', value=person.passport_number, **{'data-inputmask':"'mask':'№ 999 999'"})}}
+                         {{ wtf.form_field(form.submit, class='btn btn-primary btn-file')}}
+                    </form>
+                </div>
+
+                <div class="col-md-12" style="margin-top: 10px">
+                    <a href="{{ url_for('qr_code_download', id=person.id) }}">Скачать QR код (JPEG)</a>
+                </div>
+                <div class="col-md-12" style="margin-top: 10px">
+                    <a href="{{ url_for('qr_code_pdf', id=person.id) }}">Открыть в PDF</a>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col">
-             <form action="" method="post" class="form" role="form">
-              {{ form.csrf_token() }}
-              {{ wtf.form_field(form.passport_number, class='form-control', value=passport_num) }}
-{#              {{ wtf.form_field(form.submit, class='btn btn-primary btn-file')}}#}
-            </form>
-        </div>
-    </div>
 
-    <div class="row justify-content-center">
-
-        {% if not _pass.verified %}
-             <div>
-                <div class="col" style="border: solid; border-color: red"><h4 style="color: red;text-align: center;">Требуется подтверждение</h4></div>
-             </div>
-             <div class="col" style="margin-top: 10px">
-                <button class="btn btn-primary btn-block" >Заполнить данные</button>
-             </div>
-
-        {% endif %}
-
-        {% if _pass.verified %}
-            <div>
-                <div class="col" style="border: solid; border-color: green"><h4 style="color: green;text-align: center;">Пропуск подтвержден</h4></div>
-            </div>
-            <div class="col" style="margin-top: 10px">
-                <button class="btn btn-primary btn-block" >Отметить въезд/выезд</button>
-            </div>
-        {% endif %}
-
-    </div>
-
-
-
-
+    <script>
+        $j=jQuery.noConflict();
+        $j('document').ready(function() {
+            $j(":input").inputmask();
+        });
+    </script>
 
 {% endblock %}
