@@ -173,7 +173,7 @@ def send_email(id):
 
         return flask.redirect(url_for('get_qr_code', id=id))
 
-    return flask.render_template('email_send.html', email_form=email_form)
+    return flask.render_template('email_send.html', email_form=email_form, id=id)
 
 
 

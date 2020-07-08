@@ -11,5 +11,8 @@
          <div class="col-md-5">
              {{ wtf.form_field(email_form.submit, class='btn btn-primary btn-file' )}}
          </div>
+         <div class="col-md-5" style="margin-top: 20px">
+             <a href="{{ url_for('get_qr_code', id=id) }}"><<< Назад</a>
+         </div>
      </form>
 {% endblock %}
