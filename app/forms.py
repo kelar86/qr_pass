@@ -10,7 +10,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import BooleanField, SubmitField, StringField
 from wtforms.validators import DataRequired, Length, ValidationError
-from wtforms.fields.html5 import TelField, IntegerField
+from wtforms.fields.html5 import TelField, IntegerField, EmailField
 from app.utils import is_face_detected
 from settings import basedir
 
@@ -54,11 +54,11 @@ class UploadForm(FlaskForm):
 
 class PassportForm(FlaskForm):
     passport_number = StringField('Номер паспорта')
-    submit = SubmitField('Изменить номер')
+    submit = SubmitField('Изменить номер паспорта')
 
     def validate_phone(self, field):
         cleaned_data = field.data.replace("№", '').replace(" ", '')
-        if len(cleaned_data):
+        if len(cleaned_data) == 0:
             raise ValidationError('Поле не может быть пустым')
 
         if len(cleaned_data) != 6:
@@ -81,3 +81,7 @@ class CodeForm(FlaskForm):
         if len(cleaned_data) != 4:
             raise ValidationError('Код должен содержать 4 цифры')
 
+
+class EmailForm(FlaskForm):
+    email = EmailField('Отправить на email', validators=[DataRequired(message="Введите email")])
+    submit = SubmitField('Отправить на email')

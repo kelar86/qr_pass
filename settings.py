@@ -9,8 +9,15 @@ class FlaskUploadConfig:
     UPLOADED_QR_DEST = os.path.dirname(__file__) + '/qr_codes'
 
 
+class FlaskMailConfig:
+    MAIL_SERVER = 'smtp.yandex.ru'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_PASSWORD = 'frhjkadqpwoqqpps'
+    MAIL_USERNAME = 'qrpass@yandex.ru'
+    MAIL_ADMIN = 'qrpass@yandex.ru'
 
-class Config(FlaskUploadConfig):
+class Config(FlaskUploadConfig, FlaskMailConfig):
     CSRF_ENABLED = True
     # SECRET_KEY = 'super secret key'
     FLASK_ADMIN_SWATCH = 'flatly'

@@ -18,3 +18,5 @@ phonenumbers
 flask-login
 
 opencv-python
+
+Flask-Mail

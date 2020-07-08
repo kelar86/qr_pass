@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, IMAGES, configure_uploads, patch_request_class
 from settings import Config
+from flask_mail import Mail
 
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(Config)
@@ -16,6 +17,7 @@ photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
 patch_request_class(app)
 
+mail = Mail(app)
 
 db = SQLAlchemy(app)
 from app.models import *

@@ -1,5 +1,10 @@
 import os
+import tempfile
+from threading import Thread
+
 import cv2
+import flask
+import qrcode
 
 from settings import basedir
 
@@ -29,3 +34,34 @@ def is_face_detected(image):
     cv2.waitKey(0)
     return face_boxes
 
+
+def get_qr_file(id: int, format: str) -> tempfile._TemporaryFileWrapper:
+
+    def get_suffix(_format):
+        return {
+            'PNG': '.png',
+            'PDF': '.pdf',
+            'JPEG': '.jpg'
+        }[_format.upper()]
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+
+    url = f'{flask.request.host_url}qr_decode/{id}/'
+    qr.add_data(url)
+    img = qr.make_image(fill_color="black", back_color="white")
+    t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=get_suffix(format))
+    img.save(t_file, format=format)
+    t_file.seek(0)
+    return t_file
+
+
+def threaded(f):
+    def wrapper(*args, **kwargs):
+        thr = Thread(target = f, args = args, kwargs = kwargs)
+        thr.start()
+    return wrapper

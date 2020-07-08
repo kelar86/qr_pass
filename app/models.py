@@ -18,7 +18,7 @@ class Person(Base, UserMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     phone = Column(String, nullable=False)
-    passport_number = Column(Integer)
+    passport_number = Column(String)
     active = Column(Boolean, nullable=False, default=False)
     photo = Column(String)
 

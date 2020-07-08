@@ -2,23 +2,25 @@ import io
 import os
 import tempfile
 import uuid
+from threading import Thread
 from urllib.parse import urlparse
 
 import flask
 import qrcode
 from PIL import ExifTags, Image
+from flask_mail import Message
 from werkzeug.utils import secure_filename
 from wtforms import Label
 
-from app.utils import is_face_detected
+from app.utils import is_face_detected, get_qr_file, threaded
 from flask import url_for, render_template, abort, redirect, send_file, request
 from flask_admin.helpers import is_safe_url
 from flask_login import current_user, login_user, login_required, logout_user
 
-from app import app, db, photos
-from app.forms import LoginForm, UploadForm, PassportForm, CodeForm
+from app import app, db, photos, mail
+from app.forms import LoginForm, UploadForm, PassportForm, CodeForm, EmailForm
 from app.models import Person, Pass
-
+from settings import Config
 
 @app.route('/upload/', methods=['GET', 'POST'])
 @login_required
@@ -118,58 +120,61 @@ def get_qr_code(id):
     if not person:
         flask.abort(404)
 
-    if form.validate_on_submit():
-        person.passport_number = form.passport_number.data
-        db.session.add(person)
-        db.session.commit()
+    if flask.request.method == 'POST':
+        if form.validate_on_submit():
+            person.passport_number = form.passport_number.data
+            db.session.add(person)
+            db.session.commit()
+            person = db.session.query(Person).get(id)
 
     return flask.render_template('person.html', person=person, form=form)
 
+
+
 @app.route('/person/<id>/download_qr/')
 def qr_code_download(id):
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-
-    url = f'{flask.request.host_url}qr_decode/{id}/'
-    qr.add_data(url)
-
-    t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.jpg')
-    img = qr.make_image(fill_color="black", back_color="white")
-    img.save(t_file, format='JPEG')
-    t_file.seek(0)
-
-    return send_file(t_file.name,
+    qr_file = get_qr_file(id, 'JPEG')
+    return send_file(qr_file.name,
                      mimetype='image/jpeg',
-                     attachment_filename=t_file.name,
+                     attachment_filename=qr_file.name,
                      as_attachment=True
                      )
 
 
 @app.route('/person/<id>/pdf_qr/')
 def qr_code_pdf(id):
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
+    qr_file = get_qr_file(id, 'PDF')
 
-    url = f'{flask.request.host_url}qr_decode/{id}/'
-    qr.add_data(url)
-    img = qr.make_image(fill_color="black", back_color="white")
-    t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.pdf')
-    img.save(t_file, format='PDF', resolution=100.0)
-    t_file.seek(0)
-
-    return send_file(t_file.name,
+    return send_file(qr_file.name,
                      mimetype='application/pdf',
-                     attachment_filename=t_file.name,
+                     attachment_filename=qr_file.name,
                      as_attachment=False
                      )
+
+
+@app.route('/person/<id>/send_email/', methods=['GET', 'POST'])
+def send_email(id):
+
+    @threaded
+    def send_async_email(msg):
+        with app.app_context():
+            mail.send(msg)
+
+    email_form = EmailForm()
+    if email_form.validate_on_submit():
+        qr_file = get_qr_file(id, 'JPEG')
+        target_email = email_form.email.data
+        message = Message('Электронный пропуск', sender=Config.MAIL_ADMIN, recipients=[target_email])
+        message.body = 'Ваш электронный пропуск во вложении'
+        with app.open_resource(qr_file.name) as fp:
+            message.attach(qr_file.name, "image/jpeg", fp.read())
+            with app.app_context():
+                send_async_email(message)
+
+        return flask.redirect(url_for('get_qr_code', id=id))
+
+    return flask.render_template('email_send.html', email_form=email_form)
+
 
 
 @app.route("/logout/")
@@ -182,4 +187,5 @@ def logout():
 @app.route('/')
 def index():
     return redirect(url_for('upload'))
+
 

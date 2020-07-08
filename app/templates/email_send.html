@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block page_content %}
+    <h1>Отправка на e-mail</h1>
+     <form action="" method="post" class="form" role="form" name="email_form" id="email_form">
+         <div class="col-md-5 ">
+             {{ email_form.csrf_token() }}
+             {{ wtf.form_field(email_form.email, class='form-control')}}
+         </div>
+         <div class="col-md-5">
+             {{ wtf.form_field(email_form.submit, class='btn btn-primary btn-file' )}}
+         </div>
+     </form>
+{% endblock %}
