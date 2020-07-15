@@ -8,8 +8,13 @@
 
 {% block page_content %}
 
-    <div class="container">
-    <h1>Электронный пропуск</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Электронный пропуск</h4>
+        </div>
+    </div>
+
+
             <div class="row">
                 <div class="col-md-12">
                     <p><a href="{{ url_for('upload') }}">Изменить фото</a></p>
@@ -17,34 +22,42 @@
                 </div>
             </div>
 
-            <div class="row" style="margin-top: 20px">
-                <form action="" method="post" class="form" role="form" name="pass_form" id="pass_form">
-                     <div class="col-md-7">
-                         {{ form.csrf_token() }}
-                         {{ wtf.form_field(form.passport_number, value=person.passport_number, class='form-control', **{'data-inputmask':"'mask':'№ 999 999'"})}}
-                     </div>
-                     <div class="col-md-12">
-                         {{ wtf.form_field(form.submit, class='btn btn-primary btn-file' )}}
-                     </div>
-                </form>
-            </div>
+{#            <div class="row" style="margin-top: 20px">#}
+{#                <form action="" method="post" class="form" role="form" name="pass_form" id="pass_form">#}
+{#                     <div class="col-md-7">#}
+{#                         {{ form.csrf_token() }}#}
+{#                         {{ wtf.form_field(form.passport_number, value=person.passport_number, class='form-control', **{'data-inputmask':"'mask':'9999 № 999999'"})}}#}
+{#                     </div>#}
+{#                     <div class="col-md-12">#}
+{#                         {{ wtf.form_field(form.submit, class='btn btn-primary btn-file' )}}#}
+{#                     </div>#}
+{#                </form>#}
+{#            </div>#}
+
+         <div class="col-md-12" style="margin-top: 20px">
+            <p>ФИО: ------</p>
+            <p>Паспорт: {{ person.passport_number }}</p>
+        </div>
+         <div class="col-md-12">
+            <button type="button" class="btn btn-primary btn-file" onclick="window.location.href='{{ url_for('upload') }}'">Изменить данные</button>
+         </div>
 
             <div class="row" style="margin-top: 20px">
                 <div class="col-md-12">
-                    <a href="{{ url_for('qr_code_download', id=person.id) }}">Скачать QR код (JPEG)</a>
+                    <a href="{{ url_for('qr_code_download') }}">Скачать QR код (JPEG)</a>
                 </div>
             </div>
             <div class="row" style="margin-top: 10px">
                 <div class="col-md-12">
-                    <a href="{{ url_for('qr_code_pdf', id=person.id) }}" target="_blank">Открыть в PDF</a>
+                    <a href="{{ url_for('qr_code_pdf') }}" target="_blank">Открыть в PDF</a>
                 </div>
             </div>
              <div class="row" style="margin-top: 20px">
                 <div class="col-md-12">
-                    <a href="{{ url_for('send_email', id=person.id) }}">Отправить на e-mail</a>
+                    <a href="{{ url_for('send_email') }}">Отправить на e-mail</a>
                 </div>
             </div>
-    </div>
+
 
 
     <script>

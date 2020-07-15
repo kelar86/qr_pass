@@ -1,3 +1,4 @@
+import gzip
 import os
 import tempfile
 from threading import Thread
@@ -5,6 +6,10 @@ from threading import Thread
 import cv2
 import flask
 import qrcode
+from flask import current_app
+from flask_login import current_user
+from qrcode.util import QRData, MODE_8BIT_BYTE
+from werkzeug.local import LocalProxy
 
 from settings import basedir
 
@@ -65,3 +70,17 @@ def threaded(f):
         thr = Thread(target = f, args = args, kwargs = kwargs)
         thr.start()
     return wrapper
+
+
+# def owner_user(f):
+#     def decorated_view(*args, **kwargs):
+#         # current_user = LocalProxy(lambda: _get_user())
+#         _id = args[0] if len(args)>0 else kwargs.get('id')
+#         if current_user.id != _id:
+#             return current_app.login_manager.unauthorized()
+#         return f(*args, **kwargs)
+#     return decorated_view
+
+# .eJxTujDxwtaLDRf2XtiiAGRuuNh0sefCrgv7Lmy6sONiu8KFeUCBJjB3H1DVlgtbL-y5sBlI7gWKd4DpFiC5G6hpixIA4NE1CQ.4pc8_0yHjdpI4ykoo2SI8-JKJD0
+#
+# d219fc73-3da5-4c8c-b839-383597d504e3:Константин:Константинович:Оттовордемгентшенфельд:11-09-1986

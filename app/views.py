@@ -2,6 +2,7 @@ import io
 import os
 import tempfile
 import uuid
+import datetime
 from threading import Thread
 from urllib.parse import urlparse
 
@@ -18,7 +19,7 @@ from flask_admin.helpers import is_safe_url
 from flask_login import current_user, login_user, login_required, logout_user
 
 from app import app, db, photos, mail
-from app.forms import LoginForm, UploadForm, PassportForm, CodeForm, EmailForm
+from app.forms import LoginForm, UploadForm, PassportForm, CodeForm, EmailForm, PassVerifyForm
 from app.models import Person, Pass
 from settings import Config
 
@@ -52,12 +53,12 @@ def upload():
 
         user = current_user
         if user:
-            _pass = Pass(person_id=user.id)
+            _pass = Pass(person_id=user.id, expire_at=datetime.date(1970,1,1))
             user.photo = src
             db.session.add(user)
             db.session.add(_pass)
             db.session.commit()
-            return redirect(url_for('get_qr_code', id=user.id))
+            return redirect(url_for('get_qr_code'))
 
     return render_template('upload.html', form=form, file_url=file_url)
 
@@ -87,36 +88,44 @@ def confirm():
     if form.validate_on_submit():
         login_user(user)
         next = flask.request.args.get('next')
-        return flask.redirect(next) if next else redirect(url_for('upload'))
+        if next:
+            return flask.redirect(next)
+        if user.photo is None:
+            flask.redirect(url_for('upload'))
 
+        return redirect(url_for('get_qr_code'))
     return flask.render_template('confirm.html', form=form, phone=phone)
 
-
+#TODO: authorized for staff
 @app.route('/qr_decode/<id>/', methods=['GET', 'POST'])
 def qr_decode(id):
-    form = PassportForm()
     person = Person.query.get(id)
+    form = PassVerifyForm()
 
-    #TODO: add period and actual filtering for pass
-    _pass = Pass.query.filter_by(person_id=person.id).first()
+    if flask.request.method == 'POST':
+        if form.validate_on_submit():
+            _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
+            _pass.verified = True
+            _pass.expire_at = form.expire_at.data
+            db.session.add(_pass)
+            db.session.commit()
+
+
+    _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
 
     if not person:
         abort(404)
 
-    passport_num = person.passport_number if person.passport_number else ''
+    passport_num = person.spassport_number if person.passport_number else ''
 
-    if form.validate_on_submit():
-        person.passport_number = form.passport_number.data
-        db.session.add(person)
-        db.session.commit()
-
-    return flask.render_template('qr_decode.html', form=form, person=person, passport_num=passport_num, _pass=_pass)
+    return flask.render_template('qr_decode.html', person=person, passport_num=passport_num, _pass=_pass, form=form)
 
 
-@app.route('/person/<id>/',  methods=['GET', 'POST'])
-def get_qr_code(id):
+@login_required
+@app.route('/person/',  methods=['GET', 'POST'])
+def get_qr_code():
     form = PassportForm()
-    person = db.session.query(Person).get(id)
+    person = db.session.query(Person).get(current_user.id)
     if not person:
         flask.abort(404)
 
@@ -125,15 +134,16 @@ def get_qr_code(id):
             person.passport_number = form.passport_number.data
             db.session.add(person)
             db.session.commit()
-            person = db.session.query(Person).get(id)
+            person = db.session.query(Person).get(current_user.id)
 
     return flask.render_template('person.html', person=person, form=form)
 
 
 
-@app.route('/person/<id>/download_qr/')
-def qr_code_download(id):
-    qr_file = get_qr_file(id, 'JPEG')
+@app.route('/person/download_qr/')
+@login_required
+def qr_code_download():
+    qr_file = get_qr_file(current_user.id, 'JPEG')
     return send_file(qr_file.name,
                      mimetype='image/jpeg',
                      attachment_filename=qr_file.name,
@@ -141,9 +151,10 @@ def qr_code_download(id):
                      )
 
 
-@app.route('/person/<id>/pdf_qr/')
-def qr_code_pdf(id):
-    qr_file = get_qr_file(id, 'PDF')
+@app.route('/person/pdf_qr/')
+@login_required
+def qr_code_pdf():
+    qr_file = get_qr_file(current_user.id, 'PDF')
 
     return send_file(qr_file.name,
                      mimetype='application/pdf',
@@ -152,8 +163,8 @@ def qr_code_pdf(id):
                      )
 
 
-@app.route('/person/<id>/send_email/', methods=['GET', 'POST'])
-def send_email(id):
+@app.route('/person/send_email/', methods=['GET', 'POST'])
+def send_email():
 
     @threaded
     def send_async_email(msg):
@@ -162,7 +173,7 @@ def send_email(id):
 
     email_form = EmailForm()
     if email_form.validate_on_submit():
-        qr_file = get_qr_file(id, 'JPEG')
+        qr_file = get_qr_file(current_user.id, 'JPEG')
         target_email = email_form.email.data
         message = Message('Электронный пропуск', sender=Config.MAIL_ADMIN, recipients=[target_email])
         message.body = 'Ваш электронный пропуск во вложении'
@@ -171,11 +182,21 @@ def send_email(id):
             with app.app_context():
                 send_async_email(message)
 
-        return flask.redirect(url_for('get_qr_code', id=id))
+        return flask.redirect(url_for('get_qr_code'))
 
     return flask.render_template('email_send.html', email_form=email_form, id=id)
 
 
+#TODO: authorized for staff
+@app.route('/person/<id>/verify/', methods=['GET', 'POST'])
+def verify(id):
+    person = db.session.query(Person).get(id)
+    if not person:
+        flask.abort(404)
+
+    _pass =  Pass.query.filter_by(person_id=person.id).first()
+
+    return flask.render_template('verify.html', person=person)
 
 @app.route("/logout/")
 @login_required

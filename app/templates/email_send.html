@@ -2,17 +2,17 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block page_content %}
-    <h1>Отправка на e-mail</h1>
+    <h4>Отправка на e-mail</h4>
      <form action="" method="post" class="form" role="form" name="email_form" id="email_form">
-         <div class="col-md-5 ">
+         <div class="col-md-12 ">
              {{ email_form.csrf_token() }}
              {{ wtf.form_field(email_form.email, class='form-control')}}
          </div>
-         <div class="col-md-5">
+         <div class="col-md-12">
              {{ wtf.form_field(email_form.submit, class='btn btn-primary btn-file' )}}
          </div>
-         <div class="col-md-5" style="margin-top: 20px">
-             <a href="{{ url_for('get_qr_code', id=id) }}"><<< Назад</a>
+         <div class="col-md-12" style="margin-top: 20px">
+             <a href="{{ url_for('get_qr_code') }}"><<< Назад</a>
          </div>
      </form>
 {% endblock %}

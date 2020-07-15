@@ -14,9 +14,16 @@
 {% endblock %}
 
 {% block page_content %}
-    <h1>Загрузите фотографию</h1>
-    <form method="POST" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
-        {{ wtf.form_field(form.photo, **{'id': 'photo_input', 'data-browse-on-zone-click': "true"}) }}
-    </form>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>Загрузите фотографию</h4>
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+            {#        {{ wtf.form_field(form.passport_number)}}#}
+            {#        {{ wtf.form_field(form.passport_number) }}#}
+                    {{ wtf.form_field(form.photo, **{'id': 'photo_input', 'data-browse-on-zone-click': "true"}) }}
+
+                </form>
+        </div>
+    </div>
 {% endblock %}

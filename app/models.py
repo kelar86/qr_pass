@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from app import db
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, \
-    String, Boolean, DateTime, ForeignKey
+    String, Boolean, ForeignKey, Date
 
 Base = db.Model
 
@@ -34,8 +34,8 @@ class Person(Base, UserMixin):
 class Pass(Base):
     __tablename__ = 'pass'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    start_at = Column(DateTime)
-    expire_at = Column(DateTime)
+    start_at = Column(Date)
+    expire_at = Column(Date)
     verified = Column(Boolean, nullable=False, default=False)
     person_id = Column(ForeignKey('person.id'), nullable=False)
 

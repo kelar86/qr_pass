@@ -1,43 +1,69 @@
 {% extends "base.html" %}
 
 {% block page_content %}
-    <h1>Электронный пропуск</h1>
     <div class="row">
-        <div class="col">
-            <img src="{{ person.photo }}" class="img-thumbnail" alt="user photo" width="400" height="700">
+        <div class="col-md-12">
+            <h4>Электронный пропуск</h4>
         </div>
     </div>
 
     <div class="row">
-        <div class="col">
-             <form action="" method="post" class="form" role="form">
-              {{ form.csrf_token() }}
-              {{ wtf.form_field(form.passport_number, class='form-control', value=person.passport_number, **{'data-inputmask':"'mask':'№ 999 999'"}) }}
+        <div class="col-md-12">
+            {% if not _pass.verified %}
+                 <div>
+                    <div class="col-sm" style="border: solid; border-color: red"><h4 style="color: red;text-align: center;">Требуется подтверждение</h4></div>
+                 </div>
+            {% endif %}
 
-                {% if not _pass.verified %}
-                     <div>
-                        <div class="col" style="border: solid; border-color: red"><h4 style="color: red;text-align: center;">Требуется подтверждение</h4></div>
-                     </div>
-                {% endif %}
+            {% if _pass.verified %}
+                <div>
+                    <div class="col-sm" style="border: solid; border-color: green"><h4 style="color: green;text-align: center;">Пропуск подтвержден</h4></div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-sm">
+            <img src="{{ person.photo }}" class="img-thumbnail img-responsive center-block" alt="user photo" width="300" height="400">
+        </div>
+    </div>
 
 
-              <div class="col" style="margin-top: 10px">
-                    {{ wtf.form_field(form.submit, class='btn btn-primary btn-file')}}
+    <div class="row" style="margin-top: 20px">
+        <div class="col-md-12">
+            <p>ФИО: ------</p>
+            <p>Паспорт: {{ person.passport_number }}</p>
+            {% if _pass.verified %}
+            <p>Срок действия пропуска: {{ _pass.expire_at }}
+            {% endif %}
+        </div>
+    </div>
+    {% if _pass.verified %}
+        <div class="row justify-content-center">
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" align="center">
+                <button class="btn btn-default btn-primary">Въезд</button>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" align="center">
+                <button class="btn btn-default btn-primary">Выезд</button>
+            </div>
+        </div>
+    {% else %}
+        <form action="" method="post" class="form" role="form">
+            <div class="row">
+                <div class="col-md-12">
+                    {{ form.csrf_token() }}
+                    {{ wtf.form_field(form.expire_at) }}
+                </div>
+            </div>
+              <div class="row justify-content-center">
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" align="center">
+                    <button class="btn btn-default btn-secondary btn-danger">Подтвердить</button>
+                </div>
+                <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" align="center">
+                    <button class="btn btn-default btn-secondary btn-success">Отмена</button>
+                </div>
               </div>
-
-                {% if _pass.verified %}
-                    <div>
-                        <div class="col" style="border: solid; border-color: green"><h4 style="color: green;text-align: center;">Пропуск подтвержден</h4></div>
-                    </div>
-                    <div class="col" style="margin-top: 10px">
-                        <button class="btn btn-primary btn-block" >Отметить въезд/выезд</button>
-                    </div>
-                {% endif %}
-
-             </form>
-        </div>
-    </div>
-
+        </form>
+    {% endif %}
 
        <script>
         $j=jQuery.noConflict();

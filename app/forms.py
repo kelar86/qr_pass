@@ -11,6 +11,8 @@ from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import BooleanField, SubmitField, StringField
 from wtforms.validators import DataRequired, Length, ValidationError
 from wtforms.fields.html5 import TelField, IntegerField, EmailField
+from wtforms.fields.html5 import DateField as _DateField
+# from wtforms.fields import DateField
 from app.utils import is_face_detected
 from settings import basedir
 
@@ -53,16 +55,17 @@ class UploadForm(FlaskForm):
 
 
 class PassportForm(FlaskForm):
-    passport_number = StringField('Номер паспорта')
+    name = StringField('ФИО')
+    passport_number = StringField('Паспорт')
     submit = SubmitField('Изменить номер паспорта')
 
-    def validate_phone(self, field):
+    def validate_passport_number(self, field):
         cleaned_data = field.data.replace("№", '').replace(" ", '')
         if len(cleaned_data) == 0:
             raise ValidationError('Поле не может быть пустым')
 
-        if len(cleaned_data) != 6:
-            raise ValidationError('Номер паспорта (без серии) должен содержать 6 цифр')
+        if len(cleaned_data) != 10:
+            raise ValidationError('Номер паспорта (включая серию) должен содержать 10 цифр')
 
 
 class CodeForm(FlaskForm):
@@ -85,3 +88,7 @@ class CodeForm(FlaskForm):
 class EmailForm(FlaskForm):
     email = EmailField('Отправить на email', validators=[DataRequired(message="Введите email")])
     submit = SubmitField('Отправить на email')
+
+
+class PassVerifyForm(FlaskForm):
+    expire_at = _DateField('Срок действия пропуска:')
