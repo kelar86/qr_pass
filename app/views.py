@@ -116,7 +116,7 @@ def qr_decode(id):
     if not person:
         abort(404)
 
-    passport_num = person.spassport_number if person.passport_number else ''
+    passport_num = person.passport_number if person.passport_number else ''
 
     return flask.render_template('qr_decode.html', person=person, passport_num=passport_num, _pass=_pass, form=form)
 
