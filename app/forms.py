@@ -55,11 +55,15 @@ class UploadForm(FlaskForm):
 
 
 class PassportForm(FlaskForm):
-    name = StringField('ФИО')
+    name = StringField('Имя', validators=[DataRequired(message="Введите имя")])
+    f_name = StringField('Отчество', validators=[DataRequired(message="Введите отчество")])
+    second_name = StringField('Фамилия', validators=[DataRequired(message="Введите фамилию")])
     passport_number = StringField('Паспорт')
-    submit = SubmitField('Изменить номер паспорта')
+    submit = SubmitField('Сохранить изменения')
 
     def validate_passport_number(self, field):
+        if not field.data:
+            return False
         cleaned_data = field.data.replace("№", '').replace(" ", '')
         if len(cleaned_data) == 0:
             raise ValidationError('Поле не может быть пустым')

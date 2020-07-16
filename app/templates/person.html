@@ -14,49 +14,64 @@
         </div>
     </div>
 
-
-            <div class="row">
-                <div class="col-md-12">
-                    <p><a href="{{ url_for('upload') }}">Изменить фото</a></p>
-                    <img src="{{ person.photo }}" class="img-thumbnail" alt="user photo"  width="400" height="700">
-                </div>
-            </div>
-
-{#            <div class="row" style="margin-top: 20px">#}
-{#                <form action="" method="post" class="form" role="form" name="pass_form" id="pass_form">#}
-{#                     <div class="col-md-7">#}
-{#                         {{ form.csrf_token() }}#}
-{#                         {{ wtf.form_field(form.passport_number, value=person.passport_number, class='form-control', **{'data-inputmask':"'mask':'9999 № 999999'"})}}#}
-{#                     </div>#}
-{#                     <div class="col-md-12">#}
-{#                         {{ wtf.form_field(form.submit, class='btn btn-primary btn-file' )}}#}
-{#                     </div>#}
-{#                </form>#}
-{#            </div>#}
-
-         <div class="col-md-12" style="margin-top: 20px">
-            <p>ФИО: ------</p>
-            <p>Паспорт: {{ person.passport_number }}</p>
+    <div class="row">
+        <div class="col-md-12">
+            <p><a href="{{ url_for('upload') }}">Изменить фото</a></p>
+            <img src="{{ person.photo }}" class="img-thumbnail" alt="user photo"  width="300" height="400">
         </div>
-         <div class="col-md-12">
-            <button type="button" class="btn btn-primary btn-file" onclick="window.location.href='{{ url_for('upload') }}'">Изменить данные</button>
-         </div>
+    </div>
+    <form action="" method="post" class="form" role="form" name="pass_form" id="pass_form">
+        <div class="row" style="margin-top: 20px">
+                 {{ form.csrf_token() }}
+                <div class="col-lg-12">
+                    {% if not data_complete %}<h5>Пожалуйста, заполните данные<sup>*</sup> : <h5>{% endif %}
+                </div>
+                <div class="col-md-4 ">
+                    {{ wtf.form_field(form.name, class='form-control')}}
+                </div>
+                <div class="col-md-4 ">
+                    {{ wtf.form_field(form.f_name, class='form-control')}}
+                </div>
+                <div class="col-md-4 ">
+                    {{ wtf.form_field(form.second_name, class='form-control')}}
+                </div>
+                <div class="col-md-12">
+                     {{ wtf.form_field(form.passport_number, value=person.passport_number, class='form-control', **{'data-inputmask':"'mask':'9999 № 999999'"})}}
+                </div>
+                <div class="col-md-3">
+                     {{ wtf.form_field(form.submit, class='btn btn-primary btn-file form-control' )}}
+                </div>
+        </div>
+    </form>
+    {% if data_complete %}
+    <div class="row" style="margin-top: 20px">
+        <div class="col-md-12" >
+            <p><a href="{{ url_for('qr_code_download', data='{}_{}_{}'.format(form.name.data,
+                                                             form.f_name.data,
+                                                             form.second_name.data))}}">Скачать QR код (JPEG)</a></p>
+        </div>
 
-            <div class="row" style="margin-top: 20px">
-                <div class="col-md-12">
-                    <a href="{{ url_for('qr_code_download') }}">Скачать QR код (JPEG)</a>
-                </div>
-            </div>
-            <div class="row" style="margin-top: 10px">
-                <div class="col-md-12">
-                    <a href="{{ url_for('qr_code_pdf') }}" target="_blank">Открыть в PDF</a>
-                </div>
-            </div>
-             <div class="row" style="margin-top: 20px">
-                <div class="col-md-12">
-                    <a href="{{ url_for('send_email') }}">Отправить на e-mail</a>
-                </div>
-            </div>
+        <div class="col-md-12">
+            <p><a href="{{ url_for('qr_code_pdf', data='{}_{}_{}'.format(form.name.data,
+                                                             form.f_name.data,
+                                                             form.second_name.data))}}" target="_blank">Открыть в PDF</a></p>
+        </div>
+
+        <div class="col-md-12">
+            <p>
+                <a href="{{ url_for('send_email', data='{}_{}_{}'.format(form.name.data,
+                                                             form.f_name.data,
+                                                             form.second_name.data)) }}">
+                Отправить на e-mail
+                </a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not data_complete %}<div class="col" style="margin-top: 20px"><sup>*</sup>Мы не сохраняем Ваши персональные данные и не передаем их третьим лицам.
+        Ваши персональные данные будут сохранены в электронном пропуске (QR коде), который будет отправлен на Ваше устройство.
+        Пожалуйста, отнеситесь ответственно к сохранности Ваших персональных данных</div>{% endif %}
 
 
 

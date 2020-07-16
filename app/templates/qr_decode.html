@@ -30,7 +30,7 @@
 
     <div class="row" style="margin-top: 20px">
         <div class="col-md-12">
-            <p>ФИО: ------</p>
+            <p>ФИО: {{ name }}</p>
             <p>Паспорт: {{ person.passport_number }}</p>
             {% if _pass.verified %}
             <p>Срок действия пропуска: {{ _pass.expire_at }}

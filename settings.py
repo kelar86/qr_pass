@@ -1,6 +1,8 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+SIGNER_SECRET_KEY = 'secret-key'
+ID_SALT = 'salt'
 
 
 class FlaskUploadConfig:
@@ -26,6 +28,7 @@ class Config(FlaskUploadConfig, FlaskMailConfig):
     SECURITY_LOGIN_USER_TEMPLATE = 'login.html'
     # MEDIA_PATH = os.path.join(basedir, "/images/")
     UPLOAD_FOLDER = os.path.join(basedir, "_uploads")
+
 
 
 

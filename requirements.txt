@@ -20,3 +20,6 @@ flask-login
 opencv-python
 
 Flask-Mail
+
+hashids
+itsdangerous

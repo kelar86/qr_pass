@@ -5,8 +5,9 @@ from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, IMAGES, configure_uploads, patch_request_class
-from settings import Config
+from settings import Config, ID_SALT
 from flask_mail import Mail
+from hashids import Hashids
 
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(Config)
@@ -16,7 +17,7 @@ bootstrap = Bootstrap(app)
 photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
 patch_request_class(app)
-
+hashids = Hashids(salt=ID_SALT, min_length=5)
 mail = Mail(app)
 
 db = SQLAlchemy(app)

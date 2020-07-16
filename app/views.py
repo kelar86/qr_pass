@@ -1,3 +1,4 @@
+import hashlib
 import io
 import os
 import tempfile
@@ -7,21 +8,24 @@ from threading import Thread
 from urllib.parse import urlparse
 
 import flask
+import itsdangerous
 import qrcode
 from PIL import ExifTags, Image
 from flask_mail import Message
+from itsdangerous import URLSafeSerializer, base64_encode
 from werkzeug.utils import secure_filename
 from wtforms import Label
 
-from app.utils import is_face_detected, get_qr_file, threaded
+from app.utils import is_face_detected, get_qr_file, threaded, sign_data
 from flask import url_for, render_template, abort, redirect, send_file, request
 from flask_admin.helpers import is_safe_url
 from flask_login import current_user, login_user, login_required, logout_user
 
-from app import app, db, photos, mail
+from app import app, db, photos, mail, hashids
 from app.forms import LoginForm, UploadForm, PassportForm, CodeForm, EmailForm, PassVerifyForm
 from app.models import Person, Pass
-from settings import Config
+from settings import Config, SIGNER_SECRET_KEY
+
 
 @app.route('/upload/', methods=['GET', 'POST'])
 @login_required
@@ -97,8 +101,20 @@ def confirm():
     return flask.render_template('confirm.html', form=form, phone=phone)
 
 #TODO: authorized for staff
-@app.route('/qr_decode/<id>/', methods=['GET', 'POST'])
-def qr_decode(id):
+@app.route('/qr_decode/<data>/', methods=['GET', 'POST'])
+def qr_decode(data):
+    s = URLSafeSerializer(SIGNER_SECRET_KEY, signer_kwargs={
+        'key_derivation': 'hmac',
+        'digest_method': hashlib.sha256
+    })
+
+    try:
+        data = s.loads(data)
+    except itsdangerous.exc.BadSignature:
+        return 'HACKER DETECTED!!!!'
+
+    id = hashids.decode(data.split('_')[0])
+    name = ' '.join(data.split('_')[1:])
     person = Person.query.get(id)
     form = PassVerifyForm()
 
@@ -118,7 +134,7 @@ def qr_decode(id):
 
     passport_num = person.passport_number if person.passport_number else ''
 
-    return flask.render_template('qr_decode.html', person=person, passport_num=passport_num, _pass=_pass, form=form)
+    return flask.render_template('qr_decode.html', person=person, passport_num=passport_num, _pass=_pass, form=form, name=name)
 
 
 @login_required
@@ -126,6 +142,7 @@ def qr_decode(id):
 def get_qr_code():
     form = PassportForm()
     person = db.session.query(Person).get(current_user.id)
+    data_complete = False
     if not person:
         flask.abort(404)
 
@@ -136,25 +153,32 @@ def get_qr_code():
             db.session.commit()
             person = db.session.query(Person).get(current_user.id)
 
-    return flask.render_template('person.html', person=person, form=form)
+    if form.validate():
+        data_complete = True
+
+    return flask.render_template('person.html', person=person, form=form, data_complete=data_complete)
 
 
 
 @app.route('/person/download_qr/')
 @login_required
 def qr_code_download():
-    qr_file = get_qr_file(current_user.id, 'JPEG')
+    _id = hashids.encode(current_user.id)
+    data = f"{_id}_{request.args.get('data')}"
+    qr_file = get_qr_file(sign_data(data), 'JPEG')
+
     return send_file(qr_file.name,
                      mimetype='image/jpeg',
                      attachment_filename=qr_file.name,
                      as_attachment=True
                      )
 
-
 @app.route('/person/pdf_qr/')
 @login_required
 def qr_code_pdf():
-    qr_file = get_qr_file(current_user.id, 'PDF')
+    _id = hashids.encode(current_user.id)
+    data = f"{_id}_{request.args.get('data')}"
+    qr_file = get_qr_file(sign_data(data), 'PDF')
 
     return send_file(qr_file.name,
                      mimetype='application/pdf',
@@ -173,7 +197,9 @@ def send_email():
 
     email_form = EmailForm()
     if email_form.validate_on_submit():
-        qr_file = get_qr_file(current_user.id, 'JPEG')
+        _id = hashids.encode(current_user.id)
+        data = f"{_id}_{request.args.get('data')}"
+        qr_file = get_qr_file(sign_data(data), 'JPEG')
         target_email = email_form.email.data
         message = Message('Электронный пропуск', sender=Config.MAIL_ADMIN, recipients=[target_email])
         message.body = 'Ваш электронный пропуск во вложении'
@@ -208,5 +234,4 @@ def logout():
 @app.route('/')
 def index():
     return redirect(url_for('upload'))
-
 
