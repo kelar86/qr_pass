@@ -17,10 +17,11 @@ class Person(Base, UserMixin):
     __tablename__ = 'person'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    phone = Column(String, nullable=False)
+    phone = Column(String)
     passport_number = Column(String)
     active = Column(Boolean, nullable=False, default=False)
     photo = Column(String)
+    signature = Column(String)
 
     @property
     def is_active(self):

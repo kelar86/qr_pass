@@ -24,7 +24,7 @@
         <div class="row" style="margin-top: 20px">
                  {{ form.csrf_token() }}
                 <div class="col-lg-12">
-                    {% if not data_complete %}<h5>Пожалуйста, заполните данные<sup>*</sup> : <h5>{% endif %}
+                    {% if not data_complete %}<h5>Пожалуйста, заполните данные<sup>*</sup> : </h5>{% endif %}
                 </div>
                 <div class="col-md-4 ">
                     {{ wtf.form_field(form.name, class='form-control')}}
@@ -46,20 +46,20 @@
     {% if data_complete %}
     <div class="row" style="margin-top: 20px">
         <div class="col-md-12" >
-            <p><a href="{{ url_for('qr_code_download', data='{}_{}_{}'.format(form.name.data,
+            <p><a href="{{ url_for('qr_code_download', data='{}:{}:{}'.format(form.name.data,
                                                              form.f_name.data,
                                                              form.second_name.data))}}">Скачать QR код (JPEG)</a></p>
         </div>
 
         <div class="col-md-12">
-            <p><a href="{{ url_for('qr_code_pdf', data='{}_{}_{}'.format(form.name.data,
+            <p><a href="{{ url_for('qr_code_pdf', data='{}:{}:{}'.format(form.name.data,
                                                              form.f_name.data,
                                                              form.second_name.data))}}" target="_blank">Открыть в PDF</a></p>
         </div>
 
         <div class="col-md-12">
             <p>
-                <a href="{{ url_for('send_email', data='{}_{}_{}'.format(form.name.data,
+                <a href="{{ url_for('send_email', data='{}:{}:{}'.format(form.name.data,
                                                              form.f_name.data,
                                                              form.second_name.data)) }}">
                 Отправить на e-mail

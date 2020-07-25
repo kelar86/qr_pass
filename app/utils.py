@@ -1,3 +1,4 @@
+import base64
 import gzip
 import os
 import tempfile
@@ -73,10 +74,14 @@ def threaded(f):
         thr.start()
     return wrapper
 
-
+#TODO: Перенести хранение подписи в базу?
 def sign_data(data):
-    s = URLSafeSerializer(SIGNER_SECRET_KEY, signer_kwargs={
-        'key_derivation': 'hmac',
-        'digest_method': hashlib.sha256
-    })
-    return s.dumps(data)
+    s = Signer(SIGNER_SECRET_KEY, key_derivation='hmac', digest_method=hashlib.sha256)
+    signature = s.get_signature(data)
+    return signature
+
+def encode_data(data):
+    return base64.urlsafe_b64encode(data.encode('koi8-r')).decode()
+
+def decode_data(data):
+    return base64.b64decode(data)

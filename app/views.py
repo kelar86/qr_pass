@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import io
 import os
@@ -12,11 +13,11 @@ import itsdangerous
 import qrcode
 from PIL import ExifTags, Image
 from flask_mail import Message
-from itsdangerous import URLSafeSerializer, base64_encode
+from itsdangerous import URLSafeSerializer, base64_encode, Signer
 from werkzeug.utils import secure_filename
 from wtforms import Label
 
-from app.utils import is_face_detected, get_qr_file, threaded, sign_data
+from app.utils import is_face_detected, get_qr_file, threaded, sign_data, encode_data, decode_data
 from flask import url_for, render_template, abort, redirect, send_file, request
 from flask_admin.helpers import is_safe_url
 from flask_login import current_user, login_user, login_required, logout_user
@@ -94,8 +95,8 @@ def confirm():
         next = flask.request.args.get('next')
         if next:
             return flask.redirect(next)
-        if user.photo is None:
-            flask.redirect(url_for('upload'))
+        if not user.photo:
+            return flask.redirect(url_for('upload'))
 
         return redirect(url_for('get_qr_code'))
     return flask.render_template('confirm.html', form=form, phone=phone)
@@ -103,18 +104,20 @@ def confirm():
 #TODO: authorized for staff
 @app.route('/qr_decode/<data>/', methods=['GET', 'POST'])
 def qr_decode(data):
-    s = URLSafeSerializer(SIGNER_SECRET_KEY, signer_kwargs={
-        'key_derivation': 'hmac',
-        'digest_method': hashlib.sha256
-    })
+    data_str = base64.urlsafe_b64decode(data).decode("koi8-r")
+    id = hashids.decode(data_str.split(':')[0])[0]
+    person = Person.query.get(id)
+
+    s = Signer(SIGNER_SECRET_KEY, key_derivation='hmac', digest_method=hashlib.sha256)
 
     try:
-        data = s.loads(data)
+        s.verify_signature(data_str.encode(), person.signature)
     except itsdangerous.exc.BadSignature:
         return 'HACKER DETECTED!!!!'
+    else:
+        data = data_str
 
-    id = hashids.decode(data.split('_')[0])
-    name = ' '.join(data.split('_')[1:])
+    name = ' '.join(data.split(':')[1:])
     person = Person.query.get(id)
     form = PassVerifyForm()
 
@@ -125,7 +128,6 @@ def qr_decode(data):
             _pass.expire_at = form.expire_at.data
             db.session.add(_pass)
             db.session.commit()
-
 
     _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
 
@@ -149,6 +151,11 @@ def get_qr_code():
     if flask.request.method == 'POST':
         if form.validate_on_submit():
             person.passport_number = form.passport_number.data
+            s = Signer(SIGNER_SECRET_KEY, key_derivation='hmac', digest_method=hashlib.sha256)
+            _id = hashids.encode(current_user.id)
+            data_string = f'{_id}:{form.name.data}:{form.f_name.data}:{form.second_name.data}'
+            sign = s.sign(data_string)
+            person.signature = sign_data(sign)
             db.session.add(person)
             db.session.commit()
             person = db.session.query(Person).get(current_user.id)
@@ -164,8 +171,8 @@ def get_qr_code():
 @login_required
 def qr_code_download():
     _id = hashids.encode(current_user.id)
-    data = f"{_id}_{request.args.get('data')}"
-    qr_file = get_qr_file(sign_data(data), 'JPEG')
+    data = f"{_id}:{request.args.get('data')}"
+    qr_file = get_qr_file(encode_data(data), 'JPEG')
 
     return send_file(qr_file.name,
                      mimetype='image/jpeg',
@@ -177,8 +184,8 @@ def qr_code_download():
 @login_required
 def qr_code_pdf():
     _id = hashids.encode(current_user.id)
-    data = f"{_id}_{request.args.get('data')}"
-    qr_file = get_qr_file(sign_data(data), 'PDF')
+    data = f"{_id}:{request.args.get('data')}"
+    qr_file = get_qr_file(encode_data(data), 'PDF')
 
     return send_file(qr_file.name,
                      mimetype='application/pdf',
@@ -198,8 +205,8 @@ def send_email():
     email_form = EmailForm()
     if email_form.validate_on_submit():
         _id = hashids.encode(current_user.id)
-        data = f"{_id}_{request.args.get('data')}"
-        qr_file = get_qr_file(sign_data(data), 'JPEG')
+        data = f"{_id}:{request.args.get('data')}"
+        qr_file = get_qr_file(encode_data(data), 'JPEG')
         target_email = email_form.email.data
         message = Message('Электронный пропуск', sender=Config.MAIL_ADMIN, recipients=[target_email])
         message.body = 'Ваш электронный пропуск во вложении'
@@ -221,7 +228,6 @@ def verify(id):
         flask.abort(404)
 
     _pass =  Pass.query.filter_by(person_id=person.id).first()
-
     return flask.render_template('verify.html', person=person)
 
 @app.route("/logout/")
@@ -234,4 +240,3 @@ def logout():
 @app.route('/')
 def index():
     return redirect(url_for('upload'))
-
