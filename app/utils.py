@@ -7,18 +7,19 @@ from threading import Thread
 import cv2
 import flask
 import qrcode
+import treepoem
 from flask import current_app
 from flask_login import current_user
 from qrcode.util import QRData, MODE_8BIT_BYTE
 from werkzeug.local import LocalProxy
 
+from app import signer
 from settings import basedir, SIGNER_SECRET_KEY
 
 from itsdangerous import Signer, URLSafeSerializer
 import hashlib
 
 def is_face_detected(image):
-
     face_cascade = cv2.CascadeClassifier(os.path.join(basedir, "app/resources/haarcascade_frontalface_default.xml"))
     eye_cascade = cv2.CascadeClassifier(os.path.join(basedir, "app/resources/haarcascade_eye.xml"))
 
@@ -52,18 +53,22 @@ def get_qr_file(id: int, format: str) -> tempfile._TemporaryFileWrapper:
             'JPEG': '.jpg'
         }[_format.upper()]
 
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
+    # qr = qrcode.QRCode(
+    #     version=1,
+    #     error_correction=qrcode.constants.ERROR_CORRECT_L,
+    #     box_size=10,
+    #     border=4,
+    # )
 
-    url = f'{flask.request.host_url}qr_decode/{id}/'
-    qr.add_data(url)
-    img = qr.make_image(fill_color="black", back_color="white")
+    url = f'{flask.request.host_url}qr/{id}/'
+
+    img = treepoem.generate_barcode(
+        barcode_type='datamatrix',
+        data=url
+    )
     t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=get_suffix(format))
     img.save(t_file, format=format)
+
     t_file.seek(0)
     return t_file
 
@@ -74,10 +79,8 @@ def threaded(f):
         thr.start()
     return wrapper
 
-#TODO: Перенести хранение подписи в базу?
 def sign_data(data):
-    s = Signer(SIGNER_SECRET_KEY, key_derivation='hmac', digest_method=hashlib.sha256)
-    signature = s.get_signature(data)
+    signature = signer.get_signature(data)
     return signature
 
 def encode_data(data):

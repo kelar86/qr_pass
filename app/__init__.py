@@ -1,15 +1,19 @@
+import hashlib
+
 import flask
 from flask import Flask, request, render_template
 from flask_babelex import Babel
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_uploads import UploadSet, IMAGES, configure_uploads, patch_request_class
-from settings import Config, ID_SALT
-from flask_mail import Mail
 from hashids import Hashids
+from itsdangerous import Signer
 
-app = Flask(__name__, static_url_path='/static')
+from settings import Config, ID_SALT, SIGNER_SECRET_KEY
+
+app = Flask(__name__, static_url_path='/static/dist')
 app.config.from_object(Config)
 app.secret_key = 'some_secret'
 bootstrap = Bootstrap(app)
@@ -18,6 +22,9 @@ photos = UploadSet('photos', IMAGES)
 configure_uploads(app, photos)
 patch_request_class(app)
 hashids = Hashids(salt=ID_SALT, min_length=5)
+
+signer = Signer(SIGNER_SECRET_KEY, key_derivation='hmac', digest_method=hashlib.sha512)
+
 mail = Mail(app)
 
 db = SQLAlchemy(app)

@@ -1,11 +1,10 @@
 import uuid
 
-from sqlalchemy.orm import relationship
-
-from app import db
 from flask_login import UserMixin
 from sqlalchemy import Column, Integer, \
     String, Boolean, ForeignKey, Date
+
+from app import db
 
 Base = db.Model
 
