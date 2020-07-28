@@ -72,6 +72,7 @@ def confirm():
     return flask.render_template('confirm.html', form=form, phone=phone)
 
 
+# TODO: authorized for staff
 @app.route('/qr/<data>/', methods=['GET', 'POST'])
 def qr_decode(data):
     data_str = base64.urlsafe_b64decode(data).decode("koi8-r")
@@ -104,44 +105,7 @@ def qr_decode(data):
 
     passport_num = person.passport_number if person.passport_number else ''
 
-    return flask.render_template('qr.html', person=person, passport_num=passport_num, _pass=_pass, form=form, name=name)
-
-
-#TODO: authorized for staff
-# @app.route('/qr/<data>/', methods=['GET', 'POST'])
-# def qr_decode(data):
-#     data_str = base64.urlsafe_b64decode(data).decode("koi8-r")
-#     # id = hashids.decode(data_str.split(':')[0])[0]
-#     id = data_str.split(':')[0]
-#     person = Person.query.get(id)
-#
-#     try:
-#         signer.verify_signature(data_str.encode(), person.signature)
-#     except itsdangerous.exc.BadSignature:
-#         return 'HACKER DETECTED!!!!'
-#     else:
-#         data = data_str
-#
-#     name = ' '.join(data.split(':')[1:])
-#     person = Person.query.get(id)
-#     form = PassVerifyForm()
-#
-#     if flask.request.method == 'POST':
-#         if form.validate_on_submit():
-#             _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
-#             _pass.verified = True
-#             _pass.expire_at = form.expire_at.data
-#             db.session.add(_pass)
-#             db.session.commit()
-#
-#     _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
-#
-#     if not person:
-#         abort(404)
-#
-#     passport_num = person.passport_number if person.passport_number else ''
-#
-#     return flask.render_template('qr_decode.html', person=person, passport_num=passport_num, _pass=_pass, form=form, name=name)
+    return flask.render_template('qr_decode.html', person=person, passport_num=passport_num, _pass=_pass, form=form, name=name)
 
 
 @login_required
@@ -187,7 +151,7 @@ def qr_code_download():
 @app.route('/person/pdf_qr/')
 @login_required
 def qr_code_pdf():
-    _id = current_user.id
+    _id = hashids.encode(current_user.id)
     data = f"{_id}:{request.args.get('data')}"
     qr_file = get_qr_file(encode_data(data), 'PDF')
 
