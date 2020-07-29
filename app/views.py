@@ -134,13 +134,13 @@ def get_qr_code():
     return flask.render_template('person.html', person=person, form=form, data_complete=data_complete)
 
 
-
-@app.route('/person/download_qr/')
+@app.route('/person/download_qr/', defaults={'barcode_type': 'qr_code', 'img_format': 'JPEG'})
+@app.route('/person/download_qr/<barcode_type>/<img_format>')
 @login_required
-def qr_code_download():
+def qr_code_download(barcode_type, img_format):
     _id = hashids.encode(current_user.id)
     data = f"{_id}:{request.args.get('data')}"
-    qr_file = get_qr_file(encode_data(data), 'JPEG')
+    qr_file = get_qr_file(encode_data(data), img_format, barcode_type)
 
     return send_file(qr_file.name,
                      mimetype='image/jpeg',

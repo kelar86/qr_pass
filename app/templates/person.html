@@ -51,6 +51,12 @@
                                                              form.second_name.data))}}">Скачать QR код (JPEG)</a></p>
         </div>
 
+        <div class="col-md-12" >
+            <p><a href="{{ url_for('qr_code_download', barcode_type='qr_code', img_format='PNG', data='{}:{}:{}'.format(form.name.data,
+                                                             form.f_name.data,
+                                                             form.second_name.data))}}">Скачать QR код (PNG)</a></p>
+        </div>
+
         <div class="col-md-12">
             <p><a href="{{ url_for('qr_code_pdf', data='{}:{}:{}'.format(form.name.data,
                                                              form.f_name.data,
@@ -65,6 +71,12 @@
                 Отправить на e-mail
                 </a>
             </p>
+        </div>
+
+        <div class="col-md-12" >
+            <p><a href="{{ url_for('qr_code_download', barcode_type='datamatrix', img_format='JPEG', data='{}:{}:{}'.format(form.name.data,
+                                                             form.f_name.data,
+                                                             form.second_name.data))}}">Скачать код DATAMATRIX</a></p>
         </div>
     </div>
     {% endif %}

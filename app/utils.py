@@ -8,6 +8,7 @@ import cv2
 import flask
 import qrcode
 import treepoem
+from PIL import Image
 from flask import current_app
 from flask_login import current_user
 from qrcode.util import QRData, MODE_8BIT_BYTE
@@ -44,7 +45,7 @@ def is_face_detected(image):
     return face_boxes
 
 
-def get_qr_file(id: int, format: str) -> tempfile._TemporaryFileWrapper:
+def get_qr_file(id: int, format: str, barcode_type: str='datamatrix') -> tempfile._TemporaryFileWrapper:
 
     def get_suffix(_format):
         return {
@@ -53,21 +54,31 @@ def get_qr_file(id: int, format: str) -> tempfile._TemporaryFileWrapper:
             'JPEG': '.jpg'
         }[_format.upper()]
 
-    # qr = qrcode.QRCode(
-    #     version=1,
-    #     error_correction=qrcode.constants.ERROR_CORRECT_L,
-    #     box_size=10,
-    #     border=4,
-    # )
-
     url = f'{flask.request.host_url}qr/{id}/'
-
-    img = treepoem.generate_barcode(
-        barcode_type='datamatrix',
-        data=url
-    )
     t_file = tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=get_suffix(format))
-    img.save(t_file, format=format)
+
+    if  'qr_code' in barcode_type:
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_Q,
+            box_size=10,
+            border=4,
+        )
+
+        qr.add_data(url)
+        img = qr.make_image(fill_color="black", back_color="white")
+        img.save(t_file, format=format)
+
+    if 'datamatrix' in barcode_type:
+
+        img = treepoem.generate_barcode(
+            barcode_type='datamatrix',
+            data=url
+        )
+        img.thumbnail((450, 450), Image.ANTIALIAS)
+        img.save(t_file, format=format)
+
 
     t_file.seek(0)
     return t_file
