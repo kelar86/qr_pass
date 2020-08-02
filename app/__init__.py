@@ -1,9 +1,11 @@
 import hashlib
+import os
 
 import flask
 from flask import Flask, request, render_template
 from flask_babelex import Babel
 from flask_bootstrap import Bootstrap
+from flask_cors import CORS
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
@@ -13,8 +15,13 @@ from itsdangerous import Signer
 
 from settings import Config, ID_SALT, SIGNER_SECRET_KEY
 
-app = Flask(__name__, static_url_path='/static/dist')
+app = Flask(__name__, static_folder='static')
+cors = CORS(app)
 app.config.from_object(Config)
+# CORS settings
+app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['CORS_METHODS'] = "GET,POST,OPTIONS"
+
 app.secret_key = 'some_secret'
 bootstrap = Bootstrap(app)
 

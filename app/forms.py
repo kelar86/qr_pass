@@ -5,7 +5,7 @@ import tempfile
 import phonenumbers
 from PIL import Image, ImageDraw
 
-from app import photos, uuid
+from app import uuid, photos
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import BooleanField, SubmitField, StringField
@@ -55,9 +55,12 @@ class UploadForm(FlaskForm):
 
 
 class PassportForm(FlaskForm):
-    name = StringField('Имя', validators=[DataRequired(message="Введите имя")])
-    f_name = StringField('Отчество', validators=[DataRequired(message="Введите отчество")])
-    second_name = StringField('Фамилия', validators=[DataRequired(message="Введите фамилию")])
+    name = StringField('Имя', validators=[DataRequired(message="Введите имя"),
+                                          Length(min=3, max=30)])
+    f_name = StringField('Отчество', validators=[DataRequired(message="Введите отчество"),
+                                                 Length(min=3, max=30)])
+    second_name = StringField('Фамилия', validators=[DataRequired(message="Введите фамилию"),
+                                                     Length(min=3, max=30)])
     passport_number = StringField('Паспорт')
     submit = SubmitField('Сохранить изменения')
 

@@ -8,7 +8,7 @@ ID_SALT = 'salt'
 class FlaskUploadConfig:
     UPLOADS_DEFAULT_URL = 'http://localhost:8881/photos'
     UPLOADED_PHOTOS_DEST = os.path.dirname(__file__) + '/photos'
-    UPLOADED_QR_DEST = os.path.dirname(__file__) + '/qr_codes'
+    # UPLOADED_QR_DEST = os.path.dirname(__file__) + '/qr_codes'
 
 
 class FlaskMailConfig:
@@ -28,6 +28,10 @@ class Config(FlaskUploadConfig, FlaskMailConfig):
     SECURITY_LOGIN_USER_TEMPLATE = 'login.html'
     # MEDIA_PATH = os.path.join(basedir, "/images/")
     UPLOAD_FOLDER = os.path.join(basedir, "_uploads")
+
+    # SESSION_COOKIE_SECURE=True,
+    # SESSION_COOKIE_HTTPONLY=True,
+    # PERMANENT_SESSION_LIFETIME = 600
 
 
 

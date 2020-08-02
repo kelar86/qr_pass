@@ -1,6 +1,7 @@
 flask
 flask-admin
 flask-babelex
+flask-cors
 email_validator
 Flask-SQLAlchemy
 

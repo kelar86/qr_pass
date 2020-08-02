@@ -1,12 +1,16 @@
 import base64
-import datetime
+
 import hashlib
 import uuid
+from datetime import datetime
 from urllib.parse import urlparse
 
 import flask
 import itsdangerous
-from flask import url_for, render_template, abort, redirect, send_file, request
+from PIL import Image, ImageOps
+from flask import url_for, render_template, abort, redirect, send_file, request, jsonify, make_response, \
+    send_from_directory
+from flask_cors import cross_origin
 from flask_login import current_user, login_user, login_required, logout_user
 from flask_mail import Message
 from wtforms import Label
@@ -18,16 +22,23 @@ from app.utils import get_qr_file, threaded, sign_data, encode_data
 from settings import Config
 
 
+@app.route('/')
+def index():
+    return redirect(url_for('upload'))
+
+
 @app.route('/upload/', methods=['GET', 'POST'])
 @login_required
 def upload():
     form = UploadForm()
-    file_url = None
     if form.validate_on_submit():
-        file = photos.save(form.photo.data, name=f'{uuid.uuid4()}.')
-        src = urlparse(photos.url(file)).path
         user = current_user
         if user:
+            file = photos.save(form.photo.data, name=f'{uuid.uuid4()}.')
+            src = urlparse(photos.url(file)).path
+            img = Image.open(photos.path(file))
+            img = ImageOps.fit(img, (300, 400), Image.ANTIALIAS, 0, (0.5, 0.5))
+            img.save(photos.path(file))
             _pass = Pass(person_id=user.id, expire_at=datetime.date(1970,1,1))
             user.photo = src
             db.session.add(user)
@@ -87,7 +98,6 @@ def qr_decode(data):
         data = data_str
 
     name = ' '.join(data.split(':')[1:])
-    person = Person.query.get(id)
     form = PassVerifyForm()
 
     if flask.request.method == 'POST':
@@ -195,7 +205,7 @@ def verify(id):
     if not person:
         flask.abort(404)
 
-    _pass =  Pass.query.filter_by(person_id=person.id).first()
+    _pass = Pass.query.filter_by(person_id=person.id).first()
     return flask.render_template('verify.html', person=person)
 
 @app.route("/logout/")
@@ -205,6 +215,59 @@ def logout():
     return redirect(url_for('upload'))
 
 
-@app.route('/')
-def index():
-    return redirect(url_for('upload'))
+@app.route('/api/v1/decode/')
+def api_decode():
+    data = request.args.get('data')
+    if not data:
+        return abort(404)
+    data_str = base64.urlsafe_b64decode(data).decode("koi8-r")
+    hash_id = data_str.split(':')[0]
+    id = hashids.decode(hash_id)[0]
+    person = Person.query.get(id)
+
+    try:
+        signer.verify_signature(data_str.encode(), person.signature)
+    except itsdangerous.exc.BadSignature:
+        # BAD DATASTRING
+        return abort(403)
+    else:
+        data = data_str
+
+    name = ' '.join(data.split(':')[1:])
+    _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
+
+    return jsonify(id=hash_id,
+                   name=name,
+                   photo=person.photo,
+                   passport_number=person.passport_number,
+                   expire_at=_pass.expire_at,
+                   verified=_pass.verified
+                   )
+
+
+#TODO: authorized for staff
+
+@app.route('/api/v1/person/<id>/pass/', methods=['POST'])
+def api_verify(id):
+    # # To resolve CORS problem
+    params = request.get_json()
+    if not params or not params['expire_at']:
+        flask.abort(400)
+
+    person = db.session.query(Person).get(hashids.decode(id)[0])
+
+    if not person:
+        flask.abort(404)
+
+    _pass = Pass.query.filter_by(person_id=person.id).order_by(Pass.id.desc()).first()
+    _pass.start_at = datetime.now()
+    _pass.expire_at = datetime.strptime(params['expire_at'], '%Y-%m-%d')
+    _pass.verified = True
+    result = jsonify(
+                     pass_id=_pass.id,
+                     start_at=_pass.start_at,
+                     expire_at=_pass.expire_at,
+                     verified=_pass.verified)
+    db.session.commit()
+
+    return result
