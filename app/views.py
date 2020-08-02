@@ -2,7 +2,7 @@ import base64
 
 import hashlib
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 from urllib.parse import urlparse
 
 import flask
@@ -39,7 +39,7 @@ def upload():
             img = Image.open(photos.path(file))
             img = ImageOps.fit(img, (300, 400), Image.ANTIALIAS, 0, (0.5, 0.5))
             img.save(photos.path(file))
-            _pass = Pass(person_id=user.id, expire_at=datetime.date(1970,1,1))
+            _pass = Pass(person_id=user.id, expire_at=date(1970,1,1))
             user.photo = src
             db.session.add(user)
             db.session.add(_pass)
